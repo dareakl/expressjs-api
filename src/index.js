@@ -49,6 +49,28 @@ app.get("/api/users/:id", (req, res) => {
 app.get("/api/products", (req, res) => {
   res.send([{ id: 1, name: "chicken", price: "10.00" }]);
 });
+app.put("/api/users/:id", (req, res) => {
+  const {
+    body,
+    params: { id },
+  } = req;
+
+  // Ensure the id is a valid integer
+  const parseId = parseInt(id, 10);
+  if (isNaN(parseId)) return res.status(400).send({ error: "Invalid user ID" });
+
+  // Find the user by ID
+  const findUserIndex = mockUsers.findIndex((user) => user.id === parseId);
+  if (findUserIndex === -1)
+    return res.status(404).send({ error: "User not found" });
+
+  // Update user with the data from the body
+  mockUsers[findUserIndex] = { id: parseId, ...body };
+
+  // Return a successful response
+  return res.status(200).send({ message: "User updated successfully" });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
