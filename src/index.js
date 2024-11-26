@@ -84,6 +84,20 @@ app.patch("/api/users/:id", (req, res) => {
   return res.status(200).send({ message: "User updated successfully" });
 });
 
+app.delete("/api/users/:id", (req, res) => {
+  const {
+    params: { id },
+  } = req;
+
+  const parseId = parseInt(id, 10);
+
+  if (isNaN(parseId)) return res.sendStatus(400);
+  const findUserIndex = mockUsers.findIndex((user) => user, id === parseId);
+  if (findUserIndex === -1) return res.sendStatus(404);
+  mockUsers.splice(findUserIndex, 1);
+  return res.status(200).send({ message: "User deleted successfully" });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
