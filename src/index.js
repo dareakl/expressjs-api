@@ -1,5 +1,5 @@
 import express from "express";
-
+import { query, validationResult, body, matchedData } from "express-validator";
 const app = express();
 
 app.use(express.json());
@@ -36,24 +36,51 @@ app.get("/", loggingMiddleware, (req, res) => {
   res.send("Hello Express");
 });
 
-app.get("/api/users", (req, res) => {
-  console.log(req.query);
-  const {
-    query: { filter, value },
-  } = req;
+app.get(
+  "/api/users",
+  query("filter")
+    .isString()
+    .notEmpty()
+    .withMessage("Must not be empty")
+    .isLength({ min: 2, max: 12 })
+    .withMessage("must be at least 3-12 characters"),
+  (req, res) => {
+    const result = validationResult(req);
+    console.log(result);
+    const {
+      query: { filter, value },
+    } = req;
 
-  if (filter && value)
-    return res.send(mockUsers.filter((user) => user[filter].includes(value)));
-  return res.send(mockUsers);
-});
+    if (filter && value)
+      return res.send(mockUsers.filter((user) => user[filter].includes(value)));
+    return res.send(mockUsers);
+  }
+);
 
-app.post("/api/users", (req, res) => {
-  console.log(req.body);
-  const { body } = req;
-  const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...body };
-  mockUsers.push(newUser);
-  return res.status(201).send(newUser);
-});
+app.post(
+  "/api/users",
+  [
+    body("username")
+      .notEmpty()
+      .withMessage("Username can not be empty")
+      .isLength({ min: 5, max: 30 })
+      .withMessage("username atleast 5 char and max of 30 char")
+      .isString()
+      .withMessage("Username must be string"),
+    body("displayName").notEmpty(),
+  ],
+
+  (req, res) => {
+    const result = validationResult(req);
+    console.log(result);
+    if (!result.isEmpty())
+      return res.status(400).send({ errors: result.array() });
+    const data = matchedData(req);
+    const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
+    mockUsers.push(newUser);
+    return res.status(201).send(newUser);
+  }
+);
 
 app.get("/api/users/:id", resolveIndexByUserId, (req, res) => {
   const { findUserIndex } = req;
