@@ -1,5 +1,12 @@
 import express from "express";
-import { query, validationResult, body, matchedData } from "express-validator";
+import {
+  query,
+  validationResult,
+  body,
+  matchedData,
+  checkSchema,
+} from "express-validator";
+import { createValidationSchema } from "./utils/validationSchemas.js";
 const app = express();
 
 app.use(express.json());
@@ -57,30 +64,16 @@ app.get(
   }
 );
 
-app.post(
-  "/api/users",
-  [
-    body("username")
-      .notEmpty()
-      .withMessage("Username can not be empty")
-      .isLength({ min: 5, max: 30 })
-      .withMessage("username atleast 5 char and max of 30 char")
-      .isString()
-      .withMessage("Username must be string"),
-    body("displayName").notEmpty(),
-  ],
-
-  (req, res) => {
-    const result = validationResult(req);
-    console.log(result);
-    if (!result.isEmpty())
-      return res.status(400).send({ errors: result.array() });
-    const data = matchedData(req);
-    const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
-    mockUsers.push(newUser);
-    return res.status(201).send(newUser);
-  }
-);
+app.post("/api/users", checkSchema(createValidationSchema), (req, res) => {
+  const result = validationResult(req);
+  console.log(result);
+  if (!result.isEmpty())
+    return res.status(400).send({ errors: result.array() });
+  const data = matchedData(req);
+  const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
+  mockUsers.push(newUser);
+  return res.status(201).send(newUser);
+});
 
 app.get("/api/users/:id", resolveIndexByUserId, (req, res) => {
   const { findUserIndex } = req;
