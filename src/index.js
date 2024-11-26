@@ -71,6 +71,19 @@ app.put("/api/users/:id", (req, res) => {
   return res.status(200).send({ message: "User updated successfully" });
 });
 
+app.patch("/api/users/:id", (req, res) => {
+  const {
+    body,
+    params: { id },
+  } = req;
+  const parseId = parseInt(id, 10);
+  if (isNaN(parseId)) return res.status(400).send({ error: "Invalid user ID" });
+  const findUserIndex = mockUsers.findIndex((user) => user.id === parseId);
+  if (findUserIndex === -1) return res.sendStatus(404);
+  mockUsers[findUserIndex] = { ...mockUsers[findUserIndex], ...body };
+  return res.status(200).send({ message: "User updated successfully" });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
