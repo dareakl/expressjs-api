@@ -38,6 +38,14 @@ router.get(
 );
 
 router.get("/api/users/:id", resolveIndexByUserId, (req, res) => {
+  console.log(req.session.id);
+  req.sessionStore.get(req.session.id, (err, sessionData) => {
+    if (err) {
+      console.log(err);
+      throw err;
+    }
+    console.log(sessionData);
+  });
   const { findUserIndex } = req;
   const findUser = mockUsers[findUserIndex];
   if (!findUser) return res.sendStatus(404);

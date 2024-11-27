@@ -1,19 +1,33 @@
 import express from "express";
 import routes from "./routes/index.js";
 import cookieParser from "cookie-parser";
+import session from "express-session";
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  session({
+    secret: "sdfwsdvsefscsewe",
+    saveUninitialized: false,
+    resave: false,
+    cookie: {
+      maxAge: 60000 * 60,
+    },
+  })
+);
 app.use(routes);
 
 const PORT = process.env.PORT || 5003;
 
-app.get("/", (req, res) => {
-  res.cookie("hello", "Express", { maxAge: 10000 });
-  res.status(201).send({ msg: "Hello Express" });
-});
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+app.get("/", (req, res) => {
+  console.log(req.session);
+  console.log(req.session.id);
+  req.session.visited = true;
+  res.cookie("hello", "Express", { maxAge: 10000 });
+  res.status(201).send({ msg: "Hello Express" });
 });
