@@ -3,6 +3,9 @@ import routes from "./routes/index.js";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import { mockUsers } from "./utils/constants.js";
+import passport from "passport";
+import "./strategies/local-strategy.js";
+
 const app = express();
 
 app.use(express.json());
@@ -17,12 +20,19 @@ app.use(
     },
   })
 );
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(routes);
 
 const PORT = process.env.PORT || 5003;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+app.post("/api/auth", passport.authenticate("local"), (req, res) => {
+  res.sendStatus(200);
 });
 
 app.get("/", (req, res) => {
@@ -45,13 +55,27 @@ app.post("/api/auth", (req, res) => {
 });
 
 app.get("/api/auth/status", (req, res) => {
-  req.sessionStore.get(req.sessionID, (err, session) => {
-    console.log(session);
-  });
-  return req.session.user
-    ? res.status(200).send(req.session.user)
-    : res.status(401).send({ msg: "Not authenticated" });
+  console.log(`Inside auth/status endpoint`);
+  console.log(req.user);
+  console.log(req.session);
+  return req.user ? res.send(req.user) : res.sendStatus(401);
 });
+
+app.post("/api/auth/logout", (req, res) => {
+  if (!req.user) return res.sendStatus(401);
+  req.logout((err) => {
+    if (err) return res.sendStatus(400);
+    res.send(200);
+  });
+});
+// app.get("/api/auth/status", (req, res) => {
+//   req.sessionStore.get(req.sessionID, (err, session) => {
+//     console.log(session);
+//   });
+//   return req.session.user
+//     ? res.status(200).send(req.session.user)
+//     : res.status(401).send({ msg: "Not authenticated" });
+// });
 
 app.post("/api/cart", (req, res) => {
   if (!req.session.user) return res.sendStatus(401);
