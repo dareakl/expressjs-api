@@ -8,6 +8,7 @@ import {
 import { createValidationSchema } from "../utils/validationSchemas.js";
 import { mockUsers } from "../utils/constants.js";
 import { resolveIndexByUserId } from "../utils/middlewares.js";
+import { User } from "../mongoose/schemas/user.js";
 
 const router = Router();
 
@@ -52,16 +53,38 @@ router.get("/api/users/:id", resolveIndexByUserId, (req, res) => {
   return res.send(findUser);
 });
 
-router.post("/api/users", checkSchema(createValidationSchema), (req, res) => {
-  const result = validationResult(req);
-  console.log(result);
-  if (!result.isEmpty())
-    return res.status(400).send({ errors: result.array() });
-  const data = matchedData(req);
-  const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
-  mockUsers.push(newUser);
-  return res.status(201).send(newUser);
-});
+// Create user and save it in DB
+router.post(
+  "/api/users",
+  checkSchema(createValidationSchema),
+  async (req, res) => {
+    const result = validationResult(req);
+    if (!result.isEmpty()) return res.status(400).send(result.array());
+    const data = matchedData(req);
+    console.log(data);
+    const newUser = new User(data);
+    try {
+      const savedUser = await newUser.save();
+      return res.status(201).send(savedUser);
+    } catch (err) {
+      console.log(err);
+      return res.sendStatus(400);
+    }
+  }
+);
+
+// Static Data Using Json File to create User
+
+// router.post("/api/users", checkSchema(createValidationSchema), (req, res) => {
+//   const result = validationResult(req);
+//   console.log(result);
+//   if (!result.isEmpty())
+//     return res.status(400).send({ errors: result.array() });
+//   const data = matchedData(req);
+//   const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
+//   mockUsers.push(newUser);
+//   return res.status(201).send(newUser);
+// });
 
 router.put("/api/users/:id", resolveIndexByUserId, (req, res) => {
   const { body, findUserIndex } = req;
