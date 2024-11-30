@@ -27,6 +27,15 @@ router.get(
     .isLength({ min: 2, max: 12 })
     .withMessage("must be at least 3-12 characters"),
   (req, res) => {
+    console.log(req.session.id);
+    req.sessionStore.get(req.session.id, (err, sessionData) => {
+      if (err) {
+        console.log(err);
+        throw err;
+      }
+      console.log("Inside Session Store Get");
+      console.log(sessionData);
+    });
     const result = validationResult(req);
     console.log(result);
     const {
